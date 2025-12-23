@@ -1,0 +1,39 @@
+services:
+  db:
+    image: postgres:15-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: codex
+      POSTGRES_DB: codex_db
+      POSTGRES_PASSWORD: pass
+    ports:
+      - "5432:5432"
+
+  backend:
+    build: 
+      context: ./backend
+    volumes:
+      - ./backend/app:/app  # Hot reload logic usually requires mounting to site-packages or just app code depending on Dockerfile
+      - /mnt:/mnt           # Map all host drives
+    environment:
+      DATABASE_URL: postgresql://codex:pass@db/codex_db
+      IGDB_CLIENT_ID: ${IGDB_CLIENT_ID}
+      IGDB_CLIENT_SECRET: ${IGDB_CLIENT_SECRET}
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+
+  frontend:
+    build:
+      context: ./frontend
+    volumes:
+      - ./frontend/src:/app/src
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_URL: http://localhost:8000
+
+volumes:
+  postgres_data:
