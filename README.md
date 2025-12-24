@@ -22,7 +22,7 @@ A full-stack application to index, catalog, and enrich your local video game lib
 
 2. **Start the App**
    ```bash
-   docker-compose up -d --build
+   docker compose up -d --build
    ```
 
 3. **Access**

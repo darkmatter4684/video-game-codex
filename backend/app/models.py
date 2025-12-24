@@ -5,10 +5,16 @@ from datetime import datetime
 import enum
 
 class GameStatus(str, enum.Enum):
-    PENDING = "pending"
-    APPROVED = "approved"
-    RESOLVED = "resolved"
-    IGNORED = "ignored"
+    PENDING = "PENDING"
+    APPROVED = "APPROVED"
+    RESOLVED = "RESOLVED"
+    IGNORED = "IGNORED"
+    LOCAL = "LOCAL"
+
+class IgnoredPath(SQLModel, table=True):
+    id: UUID = Field(default_factory=uuid4, primary_key=True)
+    path: str = Field(index=True, unique=True)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
 
 class Game(SQLModel, table=True):
     id: UUID = Field(default_factory=uuid4, primary_key=True)
@@ -27,6 +33,12 @@ class Game(SQLModel, table=True):
     summary: Optional[str] = None
     rating: Optional[float] = None
     genres: Optional[str] = None
+    external_hard_drive_name: Optional[str] = None
+
+class GameUpdate(SQLModel):
+    extracted_name: Optional[str] = None
+    status: Optional[GameStatus] = None
+    external_hard_drive_name: Optional[str] = None
 
 class ScanPath(SQLModel, table=True):
     id: UUID = Field(default_factory=uuid4, primary_key=True)

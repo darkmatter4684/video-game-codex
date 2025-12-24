@@ -7,8 +7,11 @@ from typing import List
 BLOCKLIST = {
     "codex", "plaza", "skidrow", "reloaded", "fitgirl", "dodi", "repack", 
     "wot", "goty", "dlc", "multi", "multi5", "update", "v1.0", "v1", "v2", 
-    "installer", "setup", "bin", "data", "usa", "eur", "jap", "gog", "mechanics", "r.g."
+    "installer", "setup", "bin", "data", "usa", "eur", "jap", "gog", "mechanics", "r.g.",
+    "ggn", "kaos", "p2pgames"
 }
+
+GAME_EXTENSIONS = {".exe", ".iso", ".sh", ".zip", ".7z", ".rar", ".bin", ".dmg", ".tar.gz", ".tgz"}
 
 def clean_name(folder_name: str) -> str:
     name = folder_name
@@ -48,7 +51,7 @@ def clean_name(folder_name: str) -> str:
 
 def scan_directory(root_path: str) -> List[dict]:
     """
-    Scans a directory for probable game folders.
+    Scans a directory for probable game folders and files.
     Returns a list of dicts with keys: path, name_on_disk, extracted_name
     """
     found_games = []
@@ -59,12 +62,34 @@ def scan_directory(root_path: str) -> List[dict]:
         print(f"Warning: Path {root_path} does not exist.")
         return found_games
         
-    # Simple scan: Look at immediate subdirectories
-    # Can be recursive if needed, but "Game Library" folders usually are 1 level deep
+    # Simple scan: Look at immediate subdirectories and known game files
     try:
         for entry in os.scandir(root_path):
+            cleaned = None
+            
             if entry.is_dir():
                 cleaned = clean_name(entry.name)
+            elif entry.is_file():
+                # Check for .tar.gz or simple extensions
+                name = entry.name.lower()
+                is_game_file = False
+                
+                # Check full multi-part extension first
+                for ext in GAME_EXTENSIONS:
+                    if name.endswith(ext):
+                        is_game_file = True
+                        # Remove extension for cleaning
+                        name_no_ext = entry.name[:-len(ext)]
+                        cleaned = clean_name(name_no_ext)
+                        break
+                
+                if not is_game_file:
+                    ext = Path(entry.name).suffix.lower()
+                    if ext in GAME_EXTENSIONS:
+                         name_no_ext = Path(entry.name).stem
+                         cleaned = clean_name(name_no_ext)
+            
+            if cleaned:
                 found_games.append({
                     "path": entry.path,
                     "name_on_disk": entry.name,
